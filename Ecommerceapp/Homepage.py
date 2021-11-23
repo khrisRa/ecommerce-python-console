@@ -12,14 +12,19 @@ def usr_hme():
             elib.search()
         elif choice == "2":
             des = input("Enter product description:-->")
-            prd = des.lstrip().capitalize()
+            prd = des.strip().capitalize()
             usr = subscipher.usr
-            elib.buy_prd(prd,usr)
+            elib.ch_cart(prd,usr)
         elif choice == "3":
             usr = subscipher.usr
             elib.cart(usr)
         elif choice == "4":
+            usr = subscipher.usr
+            elib.u_orderhis(usr)
+        elif choice == "5":
             print("Good Bye closing in 5secs")
+            elib.backup()
+            elib.backup_cart()
             time.sleep(5)
             sys.exit()
         else:

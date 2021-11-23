@@ -58,7 +58,7 @@ while True:
             sys.exit()
     elif accOrLog == "2":
         try:
-            uname = subscipher.remove(input("Enter username: "))
+            uname = subscipher.remove(input("Enter username: ")).strip()
             pwd = mask.getpass(prompt="Enter password: ", mask='*')
             encrypted = subscipher.encrypt(pwd)
             acs = 'U'
@@ -89,7 +89,7 @@ while True:
             sys.exit()
 
     elif accOrLog == "3":
-        subscipher.backup()
+        elib.backup()
         print("Good Bye closing in 5secs")
         time.sleep(5)
         break

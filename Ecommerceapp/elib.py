@@ -3,6 +3,7 @@ import re
 import sys
 import time
 import datetime
+import csv
 
 
 
@@ -56,7 +57,8 @@ def hme_pg():
             1. Search Products
             2. Buy
             3. Your Cart
-            4. Logout
+            4. Order History
+            5. Logout
         """)
 
 
@@ -189,7 +191,7 @@ def search():
         s_choice = input("Please enter desired operation: ")
         if s_choice == "1":
             wrd = input("Enter tag description: ")
-            word = wrd.lstrip()
+            word = wrd.strip()
             conn = sqlite3.connect("ecom.db")
             c = conn.cursor()
             try:
@@ -223,7 +225,7 @@ def search():
                 sys.exit()
         elif s_choice == "2":
             wrd = input("Enter Product description: ")
-            word = wrd.lstrip()
+            word = wrd.strip()
             conn = sqlite3.connect("ecom.db")
             c = conn.cursor()
             try:
@@ -267,14 +269,44 @@ def backup():
         c.execute("SELECT * FROM user")
         results = c.fetchall()
         headers = [i[0] for i in c.description]
-        import csv
 
-        csvfile = csv.writer(open('userbckup.csv', 'w', newline=''),
+        csvfile = csv.writer(open('backups/userbckup.csv', 'w', newline=''),
                              delimiter=',', lineterminator='\r\n',
                              quoting=csv.QUOTE_ALL, escapechar='\\')
         csvfile.writerow(headers)
         csvfile.writerows(results)
-        print("backup success")
+        c.execute("SELECT * FROM products")
+        results = c.fetchall()
+        headers = [i[0] for i in c.description]
+
+        csvfile = csv.writer(open('backups/productbckup.csv', 'w', newline=''),
+                             delimiter=',', lineterminator='\r\n',
+                             quoting=csv.QUOTE_ALL, escapechar='\\')
+        csvfile.writerow(headers)
+        csvfile.writerows(results)
+        conn.close()
+    except sqlite3.DatabaseError as e:
+        print(e)
+        print("backup unsuccessful")
+    except PermissionError as w:
+        print(w)
+        print("backup unsuccessful")
+        print("Check if the file is already open")
+
+
+def backup_cart():
+    try:
+        conn = sqlite3.connect("ecom.db")
+        c = conn.cursor()
+        c.execute("SELECT * FROM cart")
+        results = c.fetchall()
+        headers = [i[0] for i in c.description]
+
+        csvfile = csv.writer(open('backups/cartbckup.csv', 'w', newline=''),
+                             delimiter=',', lineterminator='\r\n',
+                             quoting=csv.QUOTE_ALL, escapechar='\\')
+        csvfile.writerow(headers)
+        csvfile.writerows(results)
         conn.close()
     except sqlite3.DatabaseError as e:
         print(e)
@@ -293,7 +325,7 @@ def update_prd(desc):
         if c.fetchone():
             print("Enter New Details Below: ")
             des = input("Enter product description:-->")
-            prd = des.lstrip().capitalize()
+            prd = des.strip().capitalize()
             price = check_amt(input("Enter product price:-->"))
             cat = tag_check(remove(input("Enter product category tag:-->")))
             tag = cat.upper()
@@ -350,7 +382,44 @@ def del_prd(desc):
         print("file in use on your system process \nplease wait...")
         time.sleep(3)
         sys.exit()
-        
+
+
+def ch_cart(desc, uname):
+    conn = sqlite3.connect("ecom.db")
+    c = conn.cursor()
+    try:        
+        st = 'O'
+        c.execute("SELECT desc, price, qty FROM cart WHERE LOGIN = ? AND desc = ? AND status = ?", [uname, desc, st])
+        if c.fetchone():
+            c.execute("SELECT desc, price, qty FROM cart WHERE LOGIN = ? AND desc = ? AND status = ?", [uname, desc, st])
+            record = c.fetchall()
+            for row in record:                
+                print(
+                    '\nProduct Description:- ', row[0], "\n"
+                    'Price:- ', row[1], "\n"
+                    'Qty:- ', row[2], "\n"
+                    'Total:- ', round((row[1]*row[2]), 2), "\n"
+                    )
+                print("This product is already in added to cart.\nTo modify, please view your cart.")
+                time.sleep(2)
+                break
+        else:
+            buy_prd(desc, uname)        
+    except sqlite3.OperationalError as e:
+        print(e)
+        print("Database might be locked check and run again \nplease wait...")
+        sys.exit()
+    except sqlite3.IntegrityError as e:
+        print(e)
+    except FileNotFoundError:
+        print("file not existent closing in 5secs \nplease wait...")
+        time.sleep(3)
+        sys.exit()
+    except PermissionError:
+        print("file in use on your system process \nplease wait...")
+        time.sleep(3)
+        sys.exit()
+       
         
 def buy_prd(desc, uname):
     conn = sqlite3.connect("ecom.db")
@@ -365,7 +434,6 @@ def buy_prd(desc, uname):
                 print("Product out of stock\nplease try again later")
                 time.sleep(2)
             else:
-                # usr = c.execute("SELECT LOGIN FROM user WHERE LOGIN=?", [uname])
                 c.execute("SELECT price, tag FROM products WHERE desc=?", [desc])
                 rec = c.fetchone()
                 pr = rec[0]
@@ -490,7 +558,72 @@ def dis_cart(uname):
         sys.exit()
     
         
+def a_orderhis():
+    conn = sqlite3.connect("ecom.db")
+    c = conn.cursor()
+    try:        
+        st = 'C'
+        c.execute("SELECT LOGIN, desc, price, qty, strftime('%Y %m %d',date) FROM cart WHERE status = ? ORDER BY date DESC", [st])
+        record = c.fetchall()
+        for row in record:
+            print(
+                '\nUser:- ', row[0], "\n"
+                'Product Description:- ', row[1], "\n"
+                'Price:- ', row[2], "\n"
+                'Qty:- ', row[3], "\n"
+                'Total:- ', round((row[2]*row[3]), 2), "\n"
+                'Order Date:- ',row[4], "\n"
+                )
+        time.sleep(3)
+    except sqlite3.OperationalError as e:
+        print(e)
+        print("Database might be locked check and run again \nplease wait...")
+        sys.exit()
+    except sqlite3.IntegrityError as e:
+        print(e)
+    except FileNotFoundError:
+        print("file not existent closing in 5secs \nplease wait...")
+        time.sleep(3)
+        sys.exit()
+    except PermissionError:
+        print("file in use on your system process \nplease wait...")
+        time.sleep(3)
+        sys.exit()
         
+        
+def u_orderhis(uname):
+    conn = sqlite3.connect("ecom.db")
+    c = conn.cursor()
+    try:        
+        st = 'C'
+        c.execute("SELECT desc, price, qty, strftime('%Y %m %d',date) FROM cart WHERE LOGIN = ? AND status = ? ORDER BY date DESC", [uname, st])
+        record = c.fetchall()
+        for row in record:
+            print(
+                '\nProduct Description:- ', row[0], "\n"
+                'Price:- ', row[1], "\n"
+                'Qty:- ', row[2], "\n"
+                'Total:- ', round((row[1]*row[2]), 2), "\n"
+                'Order Date:- ', row[3], "\n"
+                )
+        time.sleep(3)
+    except sqlite3.OperationalError as e:
+        print(e)
+        print("Database might be locked check and run again \nplease wait...")
+        sys.exit()
+    except sqlite3.IntegrityError as e:
+        print(e)
+    except FileNotFoundError:
+        print("file not existent closing in 5secs \nplease wait...")
+        time.sleep(3)
+        sys.exit()
+    except PermissionError:
+        print("file in use on your system process \nplease wait...")
+        time.sleep(3)
+        sys.exit()
+
+
+           
 def cart(uname):
     conn = sqlite3.connect("ecom.db")
     c = conn.cursor()  
@@ -555,7 +688,7 @@ def checkout(uname):
                 sys.exit()
         elif ch == "2":
             des = input("Enter product description from cart to modify:-->")
-            prd = des.lstrip().capitalize()
+            prd = des.strip().capitalize()
             conn = sqlite3.connect("ecom.db")
             c = conn.cursor()
             try:

@@ -53,32 +53,7 @@ def check_email(uname):
     else:
         pass
     return uname
-
-
-def backup():
-    try:
-        conn = sqlite3.connect("ecom.db")
-        c = conn.cursor()
-        c.execute("SELECT * FROM user")
-        results = c.fetchall()
-        headers = [i[0] for i in c.description]
-        import csv
-
-        csvfile = csv.writer(open('userbckup.csv', 'w', newline=''),
-                             delimiter=',', lineterminator='\r\n',
-                             quoting=csv.QUOTE_ALL, escapechar='\\')
-        csvfile.writerow(headers)
-        csvfile.writerows(results)
-        print("backup success")
-        conn.close()
-    except sqlite3.DatabaseError as e:
-        print(e)
-        print("backup unsuccessful")
-    except PermissionError as w:
-        print(w)
-        print("backup unsuccessful")
-        print("Check if the file is already open")
-        
+       
         
 def UA(uname, acs):
     conn = sqlite3.connect("ecom.db")
@@ -87,12 +62,8 @@ def UA(uname, acs):
         c.execute("SELECT * FROM user WHERE LOGIN=? and ACS=?", [uname, acs])
         if c.fetchone():
             c.execute("UPDATE user SET ACCESS_COUNT = ACCESS_COUNT + 1 WHERE LOGIN =?", [uname])
-            c.execute("SELECT * FROM user WHERE LOGIN=?", [uname])
-            record = c.fetchall()
-            for row in record:
-                print("Access Count: ", row[3])
-                conn.commit()
-                conn.close()
+            conn.commit()
+            conn.close()
             print("Logged in!")
             session(uname)
             Homepage.usr_hme()            
@@ -100,12 +71,8 @@ def UA(uname, acs):
             c.execute("SELECT * FROM user WHERE LOGIN=? and ACS!=?", [uname, acs])
             if c.fetchone():
                 c.execute("UPDATE user SET ACCESS_COUNT = ACCESS_COUNT + 1 WHERE LOGIN =?", [uname])
-                c.execute("SELECT * FROM user WHERE LOGIN=?", [uname])
-                record = c.fetchall()
-                for row in record:
-                    print("Access Count: ", row[3])
-                    conn.commit()
-                    conn.close()
+                conn.commit()
+                conn.close()
                 print("Logged in!")
                 admin.admin()            
     except sqlite3.OperationalError as e:
