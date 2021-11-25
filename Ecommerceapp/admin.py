@@ -2,6 +2,7 @@ import os
 import elib
 import sys
 import time
+import reportlib
 
         
 if os.path.exists("ecom.db"):
@@ -19,7 +20,8 @@ def admin():
                 3. Update products
                 4. Delete products
                 5. Order history
-                6. Logout
+                6. Reports
+                7. Logout
             """)
         choice = input("Please enter desired operation: ")
         if choice == "1":
@@ -39,6 +41,8 @@ def admin():
         elif choice == "5":
             elib.a_orderhis()
         elif choice == "6":
+            reportlib.reps()
+        elif choice == "7":
             print("Good Bye closing in 5secs")
             elib.backup()
             time.sleep(5)
