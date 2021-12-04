@@ -48,4 +48,4 @@ def admin():
             time.sleep(5)
             sys.exit()
         else:
-            print("You have to press 1 or 2 or 3 or 4 or 5")
+            print("You have to press 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8")

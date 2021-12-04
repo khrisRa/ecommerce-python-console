@@ -71,5 +71,9 @@ def reps():
         print(e)
     except FileNotFoundError as e:
         print(e)
+    except sqlite3.OperationalError as e:
+        print(e)
+    except sqlite3.DatabaseError as e:
+        print(e)
 
 

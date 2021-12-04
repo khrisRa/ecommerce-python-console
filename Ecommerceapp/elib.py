@@ -429,7 +429,7 @@ def buy_prd(desc, uname):
         if c.fetchone():
             dis_item(desc)
             qty = check_in(input("Enter qty desired:-->"))
-            c.execute("SELECT desc, price, tag FROM products WHERE desc=? AND qty = ?", [desc, qty])
+            c.execute("SELECT desc, price, tag FROM products WHERE desc=? AND qty < ?", [desc, qty])
             if c.fetchone():
                 print("Product out of stock\nplease try again later")
                 time.sleep(2)
